@@ -1,0 +1,12 @@
+[
+	{
+		"url":"file:///dev/stdout",
+		"prefix":"my prog -- "
+	},
+	{
+		"url":"tcp://localhost:9999"
+	},
+	{
+		"url":"tcp://localhost:9998"
+	}
+]
