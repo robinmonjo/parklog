@@ -1,0 +1,11 @@
+[
+	{
+		"url":"file:///dev/stdout"
+	},
+	{
+		"url":"tcp://localhost:9999"
+	},
+	{
+		"url":"tcp://localhost:9998"
+	}
+]
