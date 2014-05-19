@@ -1,6 +1,7 @@
 [
 	{
-		"url":"file:///dev/stdout"
+		"url":"file:///dev/stdout",
+		"prefix":"my prog -- "
 	},
 	{
 		"url":"tcp://localhost:9999"

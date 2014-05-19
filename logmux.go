@@ -48,7 +48,7 @@ func initStreams() (streams []*Stream) {
 	}
 
 	for _, conf := range streamConfigs {
-		s, err := NewStreamer(conf.Url)
+		s, err := NewStreamer(&conf)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -59,7 +59,8 @@ func initStreams() (streams []*Stream) {
 }
 
 type StreamConfig struct {
-	Url string `json:"url"`
+	Url    string `json:"url"`
+	Prefix string `json:"prefix"`
 }
 
 type Streamer interface {
@@ -73,15 +74,15 @@ type Stream struct {
 	Log  *log.Logger
 }
 
-func NewStreamer(uri string) (*Stream, error) {
-	u, err := url.Parse(uri)
+func NewStreamer(conf *StreamConfig) (*Stream, error) {
+	u, err := url.Parse(conf.Url)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var conn Streamer
 
-	if u.Scheme == "tls" {
+	if u.Scheme == "tls" || u.Scheme == "ssl" {
 		//todo handle tls
 	} else if u.Scheme == "file" {
 		conn, err = os.OpenFile(u.Host+u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
@@ -93,7 +94,7 @@ func NewStreamer(uri string) (*Stream, error) {
 		return nil, err
 	}
 
-	l := log.New(conn, "", log.LstdFlags)
+	l := log.New(conn, conf.Prefix, log.LstdFlags)
 
 	return &Stream{u, conn, l}, nil
 }
