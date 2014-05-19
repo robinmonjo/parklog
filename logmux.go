@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/url"
@@ -11,7 +13,10 @@ import (
 
 func main() {
 
-	tcpStream := NewStream("file:///dev/stdout")
+	log.SetPrefix(os.Args[0] + " -- ")
+
+	streams := initStreams()
+
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -23,9 +28,38 @@ func main() {
 			}
 			break
 		}
-		tcpStream.Log.Print(line)
+		for _, stream := range streams {
+			stream.Log.Print(line)
+		}
 	}
-	tcpStream.Conn.Close()
+	for _, stream := range streams {
+		stream.Conn.Close()
+	}
+}
+
+func initStreams() (streams []*Stream) {
+	var streamConfigs []StreamConfig
+	confs, err := ioutil.ReadFile("logmux.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := json.Unmarshal(confs, &streamConfigs); err != nil {
+		log.Fatal(err)
+	}
+
+	for _, conf := range streamConfigs {
+		s, err := NewStreamer(conf.Url)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		streams = append(streams, s)
+	}
+	return
+}
+
+type StreamConfig struct {
+	Url string `json:"url"`
 }
 
 type Streamer interface {
@@ -39,7 +73,7 @@ type Stream struct {
 	Log  *log.Logger
 }
 
-func NewStream(uri string) *Stream {
+func NewStreamer(uri string) (*Stream, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		log.Fatal(err)
@@ -56,10 +90,10 @@ func NewStream(uri string) *Stream {
 	}
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	l := log.New(conn, "", log.LstdFlags)
 
-	return &Stream{u, conn, l}
+	return &Stream{u, conn, l}, nil
 }
