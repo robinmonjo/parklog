@@ -33,6 +33,8 @@ For a full list of supported endpoints refer to [golang `net` package](http://go
 ### Todo
 
 * Allow tls connection to strictly check the server cert
+* Web / script hook on start and on stop ?
+* Log rotation if file:// ?
 
 ### Notes for testing
 
