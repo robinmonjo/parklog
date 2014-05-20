@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -83,7 +84,8 @@ func NewStreamer(conf *StreamConfig) (*Stream, error) {
 	var conn Streamer
 
 	if u.Scheme == "tls" || u.Scheme == "ssl" {
-		//todo handle tls
+		config := &tls.Config{InsecureSkipVerify: true}
+		conn, err = tls.Dial("tcp", u.Host, config)
 	} else if u.Scheme == "file" {
 		conn, err = os.OpenFile(u.Host+u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	} else {

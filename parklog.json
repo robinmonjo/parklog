@@ -8,5 +8,8 @@
 	},
 	{
 		"url":"tcp://localhost:9998"
+	},
+	{
+		"url":"tls://localhost:9997"
 	}
 ]
