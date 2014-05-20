@@ -85,11 +85,11 @@ func NewStreamer(conf *StreamConfig) (*Stream, error) {
 
 	if u.Scheme == "tls" || u.Scheme == "ssl" {
 		config := &tls.Config{InsecureSkipVerify: true}
-		conn, err = tls.Dial("tcp", u.Host, config)
+		conn, err = tls.Dial("tcp", u.Host+u.Path, config)
 	} else if u.Scheme == "file" {
 		conn, err = os.OpenFile(u.Host+u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	} else {
-		conn, err = net.Dial(u.Scheme, u.Host)
+		conn, err = net.Dial(u.Scheme, u.Host+u.Path)
 	}
 
 	if err != nil {
