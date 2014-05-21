@@ -35,7 +35,6 @@ For a full list of supported endpoints refer to [golang `net` package](http://go
 * Allow tls connection to strictly check the server cert
 * Web / script hook on start, on stop on log detected ?
 * Log rotation if file:// ?
-* syslog support
 * ENV injection in `parklog.json`
 
 ### Notes for testing
