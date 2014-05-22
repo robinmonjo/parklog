@@ -22,7 +22,8 @@ This will redirect your output on endpoints specified in the `parklog.json` file
     "prefix":"Rails app log on 9998 - "
   },
   {
-    "url":"tls://localhost:9997"
+    "url":"tls://localhost:9997",
+    "allow_self_signed_cert": true
   }
 ]
 ````
@@ -32,7 +33,6 @@ For a full list of supported endpoints refer to [golang `net` package](http://go
 
 ### Todo
 
-* Allow tls connection to strictly check the server cert
 * Web / script hook on start, on stop on log detected ?
 * Log rotation if file:// ?
 * ENV injection in `parklog.json`

@@ -11,6 +11,7 @@
 		"prefix":"Rails app log on 9998 - "
 	},
 	{
-		"url":"tls://localhost:9997"
+		"url":"tls://localhost:9997",
+		"allow_self_signed_cert": true
 	}
 ]

@@ -60,8 +60,9 @@ func initStreams() (streams []*Stream) {
 }
 
 type StreamConfig struct {
-	Url    string `json:"url"`
-	Prefix string `json:"prefix"`
+	Url         string `json:"url"`
+	Prefix      string `json:"prefix"`
+	AllowSSCert bool   `json:"allow_self_signed_cert"`
 }
 
 type Streamer interface {
@@ -84,7 +85,7 @@ func NewStreamer(conf *StreamConfig) (*Stream, error) {
 	var conn Streamer
 
 	if u.Scheme == "tls" || u.Scheme == "ssl" {
-		config := &tls.Config{InsecureSkipVerify: true}
+		config := &tls.Config{InsecureSkipVerify: conf.AllowSSCert}
 		conn, err = tls.Dial("tcp", u.Host+u.Path, config)
 	} else if u.Scheme == "file" {
 		conn, err = os.OpenFile(u.Host+u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
