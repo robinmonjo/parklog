@@ -56,6 +56,10 @@ export PREFIX="Rails app log on 9998 - "
 ]
 ````
 
+### License
+
+MIT
+
 ### Notes for testing
 
 Generate a private key and certificate and launch a tls server
