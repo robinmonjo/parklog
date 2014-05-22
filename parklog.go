@@ -40,11 +40,14 @@ func main() {
 
 func initStreams() (streams []*Stream) {
 	var streamConfigs []StreamConfig
-	confs, err := ioutil.ReadFile("parklog.json")
+	file, err := ioutil.ReadFile("parklog.json")
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := json.Unmarshal(confs, &streamConfigs); err != nil {
+
+	confs := os.ExpandEnv(string(file))
+	log.Println(confs)
+	if err := json.Unmarshal([]byte(confs), &streamConfigs); err != nil {
 		log.Fatal(err)
 	}
 
