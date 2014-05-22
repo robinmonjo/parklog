@@ -27,15 +27,34 @@ This will redirect your output on endpoints specified in the `parklog.json` file
   }
 ]
 ````
-
 You can redirect to several endpoints including local files, tcp servers, tls/ssl servers etc ...
 For a full list of supported endpoints refer to [golang `net` package](http://golang.org/pkg/net/#Dial)
 
-### Todo
+You can also inject environment variable inside the `parklog.json`, wherever you want:
 
-* Web / script hook on start, on stop on log detected ?
-* Log rotation if file:// ?
-* ENV injection in `parklog.json`
+````json
+export PORT_A=9999
+export URI="file:///dev/stdout"
+export PREFIX="Rails app log on 9998 - "
+
+[
+  {
+    "url":"$URI",
+    "prefix":"Rails app on stdout - "
+  },
+  {
+    "url":"tcp://localhost:$PORT_A"
+  },
+  {
+    "url":"tcp://localhost:9998",
+    "prefix":"$PREFIX"
+  },
+  {
+    "url":"tls://localhost:9997",
+    "allow_self_signed_cert": true
+  }
+]
+````
 
 ### Notes for testing
 
