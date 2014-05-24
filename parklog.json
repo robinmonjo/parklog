@@ -1,6 +1,6 @@
 [
 	{
-		"url":"file://$PWD/log.out"
+		"url":"file://$PWD/test.out"
 	},
 	{
 		"url":"file:///dev/stdout",
