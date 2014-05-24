@@ -46,7 +46,6 @@ func initStreams() (streams []*Stream) {
 	}
 
 	confs := os.ExpandEnv(string(file))
-	log.Println(confs)
 	if err := json.Unmarshal([]byte(confs), &streamConfigs); err != nil {
 		log.Fatal(err)
 	}
@@ -63,19 +62,21 @@ func initStreams() (streams []*Stream) {
 }
 
 type StreamConfig struct {
-	Url         string `json:"url"`
-	Prefix      string `json:"prefix"`
-	AllowSSCert bool   `json:"allow_self_signed_cert"`
+	Url              string `json:"url"`
+	Prefix           string `json:"prefix"`
+	AllowSSCert      bool   `json:"allow_self_signed_cert"`
+	LogRotate        bool   `json:"log_rotate"`
+	RotationTreshold int    `json:"rotation_treshold"`
 }
 
-type Streamer interface {
+type WriterCloser interface {
 	Write(b []byte) (n int, err error)
 	Close() error
 }
 
 type Stream struct {
 	Url  *url.URL
-	Conn Streamer
+	Conn WriterCloser
 	Log  *log.Logger
 }
 
@@ -85,7 +86,7 @@ func NewStreamer(conf *StreamConfig) (*Stream, error) {
 		return nil, err
 	}
 
-	var conn Streamer
+	var conn WriterCloser
 
 	if u.Scheme == "tls" || u.Scheme == "ssl" {
 		config := &tls.Config{InsecureSkipVerify: conf.AllowSSCert}
