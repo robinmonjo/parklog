@@ -39,6 +39,9 @@ export PREFIX="Rails app log on 9998 - "
 
 [
   {
+    "url":"file://$PWD/log.out"
+  },
+  {
     "url":"$URI",
     "prefix":"Rails app on stdout - "
   },

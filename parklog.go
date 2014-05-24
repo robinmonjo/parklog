@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+const DEFAULT_ROTATION_TRESHOLD = 10 //bytes
+
 func main() {
 
 	log.SetPrefix(os.Args[0] + " -- ")
@@ -31,6 +33,7 @@ func main() {
 		}
 		for _, stream := range streams {
 			stream.Log.Print(line)
+			go stream.LogRotateIfNeeded()
 		}
 	}
 	for _, stream := range streams {
@@ -75,9 +78,11 @@ type WriterCloser interface {
 }
 
 type Stream struct {
-	Url  *url.URL
-	Conn WriterCloser
-	Log  *log.Logger
+	Url              *url.URL
+	Conn             WriterCloser
+	Log              *log.Logger
+	LogRotate        bool
+	RotationTreshold int
 }
 
 func NewStreamer(conf *StreamConfig) (*Stream, error) {
@@ -97,11 +102,27 @@ func NewStreamer(conf *StreamConfig) (*Stream, error) {
 		conn, err = net.Dial(u.Scheme, u.Host+u.Path)
 	}
 
+	if u.Scheme != "file" && conf.LogRotate {
+		log.Println("Warning", u.Scheme, "doesn't support log rotation, changing config")
+		conf.LogRotate = false
+	}
+
+	if conf.LogRotate && conf.RotationTreshold == 0 {
+		conf.RotationTreshold = DEFAULT_ROTATION_TRESHOLD
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	l := log.New(conn, conf.Prefix, log.LstdFlags)
 
-	return &Stream{u, conn, l}, nil
+	return &Stream{u, conn, l, conf.LogRotate, conf.RotationTreshold}, nil
+}
+
+func (stream Stream) LogRotateIfNeeded() {
+	if !stream.LogRotate {
+		return
+	}
+	log.Println("Will perform log rotation")
 }
