@@ -1,6 +1,6 @@
 ## Parklog
 
-Simple tool written in Go to reroute your app stdout/stderr to different local or remote endpoints.
+Simple tool written in Go to redirect your app stdout/stderr to different local or remote endpoints.
 
 ### Usage
 
