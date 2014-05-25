@@ -3,10 +3,6 @@
 		"url":"file://$PWD/test.out"
 	},
 	{
-		"url":"file:///dev/stdout",
-		"prefix":"Rails app on stdout - "
-	},
-	{
 		"url":"tcp://localhost:9999"
 	},
 	{
