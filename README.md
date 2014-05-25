@@ -1,4 +1,4 @@
-### Parklog
+## Parklog
 
 Simple tool written in Go to reroute your app stdout/stderr to different local or remote endpoints.
 
@@ -63,7 +63,9 @@ export PREFIX="Rails app log on 9998 - "
 
 ### Installation
 
-`curl -sL https://raw.githubusercontent.com/robinmonjo/parklog/master/parklog.go > parklog.go && go build parklog.go && sudo mv parklog /usr/local/bin`
+````bash
+curl -sL https://raw.githubusercontent.com/robinmonjo/parklog/master/parklog.go > parklog.go && go build parklog.go && sudo mv parklog /usr/local/bin
+````
 
 This will download the source file, build it (you need Go by the way) and move it to your `/usr/local/bin` directory.
 
