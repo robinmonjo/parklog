@@ -1,12 +1,12 @@
 ### Parklog
 
-Tool to route your app stdout/stderr.
+Simple tool written in Go to reroute your app stdout/stderr to different local or remote endpoints.
 
 ### Usage
 
 `bundle exec rails s | parklog`
 
-This will redirect your output on endpoints specified in the `parklog.json` file. This file may look like this:
+This will redirect your output on endpoints specified in the `parklog.json` file. This file must be set in your app root directory (as a `Procfile` for instance) and may look like this:
 
 ````json
 [
@@ -32,11 +32,13 @@ For a full list of supported endpoints refer to [golang `net` package](http://go
 
 You can also inject environment variable inside the `parklog.json`, wherever you want:
 
-````json
+````bash
 export PORT_A=9999
 export URI="file:///dev/stdout"
 export PREFIX="Rails app log on 9998 - "
+````
 
+````json
 [
   {
     "url":"file://$PWD/log.out"
@@ -58,6 +60,12 @@ export PREFIX="Rails app log on 9998 - "
   }
 ]
 ````
+
+### Installation
+
+`curl -sL https://raw.githubusercontent.com/robinmonjo/parklog/master/parklog.go > parklog.go && go build parklog.go && sudo mv parklog /usr/local/bin`
+
+This will download the source file, build it (you need Go by the way) and move it to your `/usr/local/bin` directory.
 
 ### License
 
