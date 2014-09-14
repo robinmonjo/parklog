@@ -67,14 +67,9 @@ type StreamConfig struct {
 	AllowSSCert bool   `json:"allow_self_signed_cert"`
 }
 
-type WriterCloser interface {
-	Write(b []byte) (n int, err error)
-	Close() error
-}
-
 type Stream struct {
 	Url  *url.URL
-	Conn WriterCloser
+	Conn io.WriteCloser
 	Log  *log.Logger
 }
 
@@ -84,7 +79,7 @@ func NewStreamer(conf *StreamConfig) (*Stream, error) {
 		return nil, err
 	}
 
-	var conn WriterCloser
+	var conn io.WriteCloser
 
 	if u.Scheme == "tls" || u.Scheme == "ssl" {
 		config := &tls.Config{InsecureSkipVerify: conf.AllowSSCert}
