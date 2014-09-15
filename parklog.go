@@ -146,7 +146,7 @@ func (s *Stream) Connect() error {
 func (s *Stream) Write(line string) {
 	switch {
 	case s.Status == CONNECTED:
-		if _, err := s.Conn.Write([]byte(line)); err != nil {
+		if _, err := s.Conn.Write([]byte(s.Conf.Prefix + " " + line)); err != nil {
 			s.Status = NOT_CONNECTED
 			_log(err)
 		}
