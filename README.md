@@ -85,13 +85,3 @@ curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.1.0/parklog_
 ### License
 
 MIT
-
-### Notes for testing
-
-Generate a private key and certificate and launch a tls server
-
-````bash
-openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout key.pem -out cert.pem
-cat key.pem cert.pem > full_cert.pem
-openssl s_server -cert full_cert.pem -port 9997
-````
