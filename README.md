@@ -63,11 +63,17 @@ export PREFIX="Rails app log on 9998 - "
 
 ### Installation
 
-````bash
-curl -sL https://raw.githubusercontent.com/robinmonjo/parklog/master/parklog.go > parklog.go && go build parklog.go && sudo mv parklog /usr/local/bin
-````
+## OSX
 
-This will download the source file, build it (you need Go by the way) and move it to your `/usr/local/bin` directory.
+`curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.1.0/parklog_darwin_x86_64.tgz | tar -C /usr/local/bin -zxf -`
+
+## Linux arm (Raspbery Pi)
+
+`curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.1.0/parklog_linux_pi.tgz | tar -C /usr/local/bin -zxf -`
+
+## Linux
+
+``curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.1.0/parklog_linux_x86_64.tgz | tar -C /usr/local/bin -zxf -``
 
 ### License
 
