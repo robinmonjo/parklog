@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"encoding/json"
+	"flag"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,6 +13,8 @@ import (
 	"os"
 	"time"
 )
+
+var verbose *bool = flag.Bool("v", false, "verbose")
 
 const DIAL_TIMEOUT = 5 * time.Second
 
@@ -24,6 +27,7 @@ const (
 )
 
 func main() {
+	flag.Parse()
 
 	log.SetPrefix(os.Args[0] + " -- ")
 
@@ -36,7 +40,7 @@ func main() {
 
 		if err != nil {
 			if err != io.EOF {
-				log.Fatal(err)
+				_log(err)
 			}
 			break
 		}
@@ -46,6 +50,12 @@ func main() {
 	}
 	for _, stream := range streams {
 		stream.Conn.Close()
+	}
+}
+
+func _log(v ...interface{}) {
+	if *verbose {
+		log.Println(v)
 	}
 }
 
@@ -64,7 +74,7 @@ func initStreams() (streams []*Stream) {
 	for _, conf := range streamConfigs {
 		s, err := NewStream(&conf)
 		if err != nil {
-			log.Println(err)
+			_log(err)
 			continue
 		}
 		streams = append(streams, s)
@@ -100,7 +110,7 @@ func (s *Stream) TryConnect() {
 	s.Status = CONNECTING
 	if err := s.Connect(); err != nil {
 		s.Status = NOT_CONNECTED
-		log.Println(err)
+		_log(err)
 	} else {
 		s.Status = CONNECTED
 	}
@@ -138,10 +148,9 @@ func (s *Stream) Write(line string) {
 	case s.Status == CONNECTED:
 		if _, err := s.Conn.Write([]byte(line)); err != nil {
 			s.Status = NOT_CONNECTED
-			log.Println(err)
+			_log(err)
 		}
 	case s.Status == NOT_CONNECTED:
-		log.Println(s, "is oflline")
 		s.TryConnect()
 	}
 }
