@@ -125,14 +125,14 @@ func (s *Stream) Connect() error {
 }
 
 func (s *Stream) Write(line string) {
-	if s.Status == CONNECTED {
+	switch {
+	case s.Status == CONNECTED:
 		if _, err := s.Conn.Write([]byte(line)); err != nil {
 			s.Status = NOT_CONNECTED
 			log.Println(err)
 		}
-	} else {
+	case s.Status == NOT_CONNECTED:
 		log.Println(s, "is oflline")
 		s.TryConnect()
 	}
-
 }
