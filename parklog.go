@@ -16,6 +16,12 @@ import (
 
 var verbose *bool = flag.Bool("v", false, "verbose")
 
+func _log(v ...interface{}) {
+	if *verbose {
+		log.Println(v)
+	}
+}
+
 const DIAL_TIMEOUT = 5 * time.Second
 
 type StreamStatus int
@@ -50,12 +56,6 @@ func main() {
 	}
 	for _, stream := range streams {
 		stream.Conn.Close()
-	}
-}
-
-func _log(v ...interface{}) {
-	if *verbose {
-		log.Println(v)
 	}
 }
 
