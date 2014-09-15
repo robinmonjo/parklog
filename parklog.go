@@ -112,13 +112,22 @@ func (s *Stream) Connect() error {
 	path := s.Url.Host + s.Url.Path
 
 	switch {
+
 	case s.Url.Scheme == "tls" || s.Url.Scheme == "ssl":
-		config := &tls.Config{InsecureSkipVerify: s.Conf.AllowSSCert}
-		conn, err = tls.Dial("tcp", path, config)
+		tcpConn, dialErr := net.DialTimeout("tcp", path, DIAL_TIMEOUT)
+		if dialErr != nil {
+			config := &tls.Config{InsecureSkipVerify: s.Conf.AllowSSCert}
+			conn = tls.Client(tcpConn, config)
+		} else {
+			err = dialErr
+		}
+
 	case s.Url.Scheme == "file":
 		conn, err = os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+
 	default:
 		conn, err = net.DialTimeout(s.Url.Scheme, path, DIAL_TIMEOUT)
+
 	}
 	s.Conn = conn
 	return err
