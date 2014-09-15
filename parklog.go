@@ -30,7 +30,7 @@ func main() {
 			break
 		}
 		for _, stream := range streams {
-			stream.Log.Print(line)
+			stream.Write(line)
 		}
 	}
 	for _, stream := range streams {
@@ -51,7 +51,7 @@ func initStreams() (streams []*Stream) {
 	}
 
 	for _, conf := range streamConfigs {
-		s, err := NewStreamer(&conf)
+		s, err := NewStream(&conf)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -70,10 +70,9 @@ type StreamConfig struct {
 type Stream struct {
 	Url  *url.URL
 	Conn io.WriteCloser
-	Log  *log.Logger
 }
 
-func NewStreamer(conf *StreamConfig) (*Stream, error) {
+func NewStream(conf *StreamConfig) (*Stream, error) {
 	u, err := url.Parse(conf.Url)
 	if err != nil {
 		return nil, err
@@ -94,7 +93,12 @@ func NewStreamer(conf *StreamConfig) (*Stream, error) {
 		return nil, err
 	}
 
-	l := log.New(conn, conf.Prefix, log.LstdFlags)
+	return &Stream{u, conn}, nil
+}
 
-	return &Stream{u, conn, l}, nil
+func (s *Stream) Write(line string) {
+	if _, err := s.Conn.Write([]byte(line)); err != nil {
+		log.Println(err)
+	}
+
 }
