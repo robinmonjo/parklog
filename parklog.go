@@ -10,6 +10,17 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"time"
+)
+
+const DIAL_TIMEOUT = 5 * time.Second
+
+type StreamStatus int
+
+const (
+	CONNECTED StreamStatus = iota
+	CONNECTING
+	NOT_CONNECTED
 )
 
 func main() {
@@ -68,8 +79,10 @@ type StreamConfig struct {
 }
 
 type Stream struct {
-	Url  *url.URL
-	Conn io.WriteCloser
+	Url    *url.URL
+	Conn   io.WriteCloser
+	Conf   *StreamConfig
+	Status StreamStatus
 }
 
 func NewStream(conf *StreamConfig) (*Stream, error) {
@@ -78,27 +91,48 @@ func NewStream(conf *StreamConfig) (*Stream, error) {
 		return nil, err
 	}
 
-	var conn io.WriteCloser
+	stream := &Stream{Url: u, Conf: conf, Status: CONNECTING}
+	stream.TryConnect()
+	return stream, nil
+}
 
-	if u.Scheme == "tls" || u.Scheme == "ssl" {
-		config := &tls.Config{InsecureSkipVerify: conf.AllowSSCert}
-		conn, err = tls.Dial("tcp", u.Host+u.Path, config)
-	} else if u.Scheme == "file" {
-		conn, err = os.OpenFile(u.Host+u.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+func (s *Stream) TryConnect() {
+	s.Status = CONNECTING
+	if err := s.Connect(); err != nil {
+		s.Status = NOT_CONNECTED
+		log.Println(err)
 	} else {
-		conn, err = net.Dial(u.Scheme, u.Host+u.Path)
+		s.Status = CONNECTED
 	}
+}
 
-	if err != nil {
-		return nil, err
+func (s *Stream) Connect() error {
+	var conn io.WriteCloser
+	var err error
+	path := s.Url.Host + s.Url.Path
+
+	switch {
+	case s.Url.Scheme == "tls" || s.Url.Scheme == "ssl":
+		config := &tls.Config{InsecureSkipVerify: s.Conf.AllowSSCert}
+		conn, err = tls.Dial("tcp", path, config)
+	case s.Url.Scheme == "file":
+		conn, err = os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	default:
+		conn, err = net.DialTimeout(s.Url.Scheme, path, DIAL_TIMEOUT)
 	}
-
-	return &Stream{u, conn}, nil
+	s.Conn = conn
+	return err
 }
 
 func (s *Stream) Write(line string) {
-	if _, err := s.Conn.Write([]byte(line)); err != nil {
-		log.Println(err)
+	if s.Status == CONNECTED {
+		if _, err := s.Conn.Write([]byte(line)); err != nil {
+			s.Status = NOT_CONNECTED
+			log.Println(err)
+		}
+	} else {
+		log.Println(s, "is oflline")
+		s.TryConnect()
 	}
 
 }
