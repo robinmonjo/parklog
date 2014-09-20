@@ -11,6 +11,9 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 )
 
@@ -33,12 +36,40 @@ const (
 	NOT_CONNECTED
 )
 
+var (
+	streams     []*Stream
+	streamsLock = new(sync.RWMutex)
+)
+
 func main() {
 	flag.Parse()
 
 	log.SetPrefix(os.Args[0] + " -- ")
 
-	streams := initStreams()
+	//listening for SIGUSR2 to provide hot config reload
+	s := make(chan os.Signal, 1)
+	signal.Notify(s, syscall.SIGUSR2)
+	go func() {
+		for {
+			<-s
+			_log("SIGUSR2 trying to reload config ...")
+			err, tmpStreams := initStreams()
+			if err != nil {
+				_log("Couldn't relaod", err)
+				continue
+			}
+			streamsLock.Lock()
+			streams = tmpStreams
+			streamsLock.Unlock()
+			_log("Config relaoded")
+		}
+	}()
+
+	var err error
+	if err, streams = initStreams(); err != nil {
+		//failed to read initial config, aborting
+		log.Fatal(err)
+	}
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -60,16 +91,16 @@ func main() {
 	}
 }
 
-func initStreams() (streams []*Stream) {
+func initStreams() (err error, streams []*Stream) {
 	var streamConfigs []StreamConfig
 	file, err := ioutil.ReadFile(*configPath)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	confs := os.ExpandEnv(string(file))
-	if err := json.Unmarshal([]byte(confs), &streamConfigs); err != nil {
-		log.Fatal(err)
+	if err = json.Unmarshal([]byte(confs), &streamConfigs); err != nil {
+		return
 	}
 
 	for _, conf := range streamConfigs {
