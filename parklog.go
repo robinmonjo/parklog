@@ -15,6 +15,7 @@ import (
 )
 
 var verbose *bool = flag.Bool("v", false, "verbose")
+var configPath *string = flag.String("c", "./parklog.json", "config file path")
 
 func _log(v ...interface{}) {
 	if *verbose {
@@ -61,7 +62,7 @@ func main() {
 
 func initStreams() (streams []*Stream) {
 	var streamConfigs []StreamConfig
-	file, err := ioutil.ReadFile("parklog.json")
+	file, err := ioutil.ReadFile(*configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,7 +147,7 @@ func (s *Stream) Connect() error {
 func (s *Stream) Write(line string) {
 	switch {
 	case s.Status == CONNECTED:
-		if _, err := s.Conn.Write([]byte(s.Conf.Prefix + " " + line)); err != nil {
+		if _, err := s.Conn.Write([]byte(s.Conf.Prefix + line)); err != nil {
 			s.Status = NOT_CONNECTED
 			_log(err)
 		}
