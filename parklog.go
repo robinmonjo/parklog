@@ -57,7 +57,7 @@ func main() {
 			_log("SIGUSR2 trying to reload config ...")
 			err, tmpStreams := initStreams()
 			if err != nil {
-				_log("Couldn't relaod", err)
+				_log("Couldn't reload", err)
 				continue
 			}
 			streamsLock.Lock()
@@ -65,7 +65,7 @@ func main() {
 			streams = tmpStreams
 			tmpStreams = nil
 			streamsLock.Unlock()
-			_log("Config relaoded")
+			_log("Config reloaded")
 		}
 	}()
 
