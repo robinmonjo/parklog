@@ -36,8 +36,10 @@ const (
 	NOT_CONNECTED
 )
 
+type Streams []*Stream
+
 var (
-	streams     []*Stream
+	streams     Streams
 	streamsLock = new(sync.RWMutex)
 )
 
@@ -59,7 +61,9 @@ func main() {
 				continue
 			}
 			streamsLock.Lock()
+			streams.closeAll()
 			streams = tmpStreams
+			tmpStreams = nil
 			streamsLock.Unlock()
 			_log("Config relaoded")
 		}
@@ -82,12 +86,20 @@ func main() {
 			}
 			break
 		}
-		for _, stream := range streams {
-			stream.Write(line)
-		}
+		streams.writeAll(line)
 	}
-	for _, stream := range streams {
+	streams.closeAll()
+}
+
+func (streams *Streams) closeAll() {
+	for _, stream := range *streams {
 		stream.Conn.Close()
+	}
+}
+
+func (streams *Streams) writeAll(line string) {
+	for _, stream := range *streams {
+		stream.Write(line)
 	}
 }
 
@@ -178,9 +190,14 @@ func (s *Stream) Connect() error {
 func (s *Stream) Write(line string) {
 	switch {
 	case s.Status == CONNECTED:
-		if _, err := s.Conn.Write([]byte(s.Conf.Prefix + line)); err != nil {
+		toWrite := []byte(s.Conf.Prefix + line)
+		n, err := s.Conn.Write(toWrite)
+		if err != nil {
 			s.Status = NOT_CONNECTED
 			_log(err)
+		}
+		if n != len(toWrite) {
+			_log("Failed to write some bytes on ", s.Url)
 		}
 	case s.Status == NOT_CONNECTED:
 		s.TryConnect()
