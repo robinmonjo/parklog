@@ -17,15 +17,11 @@ import (
 	"time"
 )
 
+//Flags
 var verbose *bool = flag.Bool("v", false, "verbose")
 var configPath *string = flag.String("c", "./parklog.json", "config file path")
 
-func _log(v ...interface{}) {
-	if *verbose {
-		log.Println(v)
-	}
-}
-
+//Constants
 const DIAL_TIMEOUT = 5 * time.Second
 
 type StreamStatus int
@@ -36,60 +32,14 @@ const (
 	NOT_CONNECTED
 )
 
-type Streams []*Stream
-
+//Global vars
 var (
 	streams     Streams
 	streamsLock = new(sync.RWMutex)
 )
 
-func main() {
-	flag.Parse()
-
-	log.SetPrefix(os.Args[0] + " -- ")
-
-	//listening for SIGUSR2 to provide hot config reload
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGUSR2)
-	go func() {
-		for {
-			<-s
-			_log("SIGUSR2 trying to reload config ...")
-			err, tmpStreams := initStreams()
-			if err != nil {
-				_log("Couldn't reload", err)
-				continue
-			}
-			streamsLock.Lock()
-			streams.closeAll()
-			streams = tmpStreams
-			tmpStreams = nil
-			streamsLock.Unlock()
-			_log("Config reloaded")
-		}
-	}()
-
-	var err error
-	if err, streams = initStreams(); err != nil {
-		//failed to read initial config, aborting
-		log.Fatal(err)
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		line, err := reader.ReadString('\n')
-
-		if err != nil {
-			if err != io.EOF {
-				_log(err)
-			}
-			break
-		}
-		streams.writeAll(line)
-	}
-	streams.closeAll()
-}
+//Types
+type Streams []*Stream
 
 func (streams *Streams) closeAll() {
 	for _, stream := range *streams {
@@ -101,29 +51,6 @@ func (streams *Streams) writeAll(line string) {
 	for _, stream := range *streams {
 		stream.Write(line)
 	}
-}
-
-func initStreams() (err error, streams []*Stream) {
-	var streamConfigs []StreamConfig
-	file, err := ioutil.ReadFile(*configPath)
-	if err != nil {
-		return
-	}
-
-	confs := os.ExpandEnv(string(file))
-	if err = json.Unmarshal([]byte(confs), &streamConfigs); err != nil {
-		return
-	}
-
-	for _, conf := range streamConfigs {
-		s, err := NewStream(&conf)
-		if err != nil {
-			_log(err)
-			continue
-		}
-		streams = append(streams, s)
-	}
-	return
 }
 
 type StreamConfig struct {
@@ -202,4 +129,81 @@ func (s *Stream) Write(line string) {
 	case s.Status == NOT_CONNECTED:
 		s.TryConnect()
 	}
+}
+
+func initStreams() (err error, streams []*Stream) {
+	var streamConfigs []StreamConfig
+	file, err := ioutil.ReadFile(*configPath)
+	if err != nil {
+		return
+	}
+
+	confs := os.ExpandEnv(string(file))
+	if err = json.Unmarshal([]byte(confs), &streamConfigs); err != nil {
+		return
+	}
+
+	for _, conf := range streamConfigs {
+		s, err := NewStream(&conf)
+		if err != nil {
+			_log(err)
+			continue
+		}
+		streams = append(streams, s)
+	}
+	return
+}
+
+func _log(v ...interface{}) {
+	if *verbose {
+		log.Println(v)
+	}
+}
+
+func main() {
+	flag.Parse()
+
+	log.SetPrefix(os.Args[0] + " -- ")
+
+	//listening for SIGUSR2 to provide hot config reload
+	s := make(chan os.Signal, 1)
+	signal.Notify(s, syscall.SIGUSR2)
+	go func() {
+		for {
+			<-s
+			_log("SIGUSR2 trying to reload config ...")
+			err, tmpStreams := initStreams()
+			if err != nil {
+				_log("Couldn't reload", err)
+				continue
+			}
+			streamsLock.Lock()
+			streams.closeAll()
+			streams = tmpStreams
+			tmpStreams = nil
+			streamsLock.Unlock()
+			_log("Config reloaded")
+		}
+	}()
+
+	var err error
+	if err, streams = initStreams(); err != nil {
+		//failed to read initial config, aborting
+		log.Fatal(err)
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		line, err := reader.ReadString('\n')
+
+		if err != nil {
+			if err != io.EOF {
+				_log(err)
+			}
+			break
+		}
+		streams.writeAll(line)
+	}
+	streams.closeAll()
 }

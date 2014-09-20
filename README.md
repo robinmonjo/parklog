@@ -4,9 +4,12 @@ Simple tool written in Go to redirect your app stdout/stderr to different local 
 
 ### Usage
 
-`bundle exec rails s | parklog`
+`bundle exec rails s | parklog [-c <path_to_config>] [-v]`
 
-This will redirect your output on endpoints specified in the `parklog.json` file. This file must be set in your app root directory (as a `Procfile` for instance) and may look like this:
+* `-c <path_to_config>` path to the config file (default `./parklog.json`)
+* `-v` verbose
+
+Config example
 
 ````json
 [
@@ -27,10 +30,11 @@ This will redirect your output on endpoints specified in the `parklog.json` file
   }
 ]
 ````
+
 You can redirect to several endpoints including local files, tcp servers, tls/ssl servers etc ...
 For a full list of supported endpoints refer to [golang `net` package](http://golang.org/pkg/net/#Dial)
 
-You can also inject environment variable inside the `parklog.json`, wherever you want:
+You can also inject environment variable inside the `parklog.json`:
 
 ````bash
 export PORT_A=9999
@@ -60,6 +64,15 @@ export PREFIX="Rails app log on 9998 - "
   }
 ]
 ````
+
+### Hot configuration reload
+
+You can change parklog's config without restarting it. For that you can edit your config file then:
+
+1. Find parklog's PID (using `ps -ef | grep parklog`)
+2. Send `SIGUSR2` signal to parklog: `kill -s USR2 <PID>`
+
+If your config file is not valid (i.e contains JSON syntax error), the config changed won't be performed.
 
 ### Installation
 
