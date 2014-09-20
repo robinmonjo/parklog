@@ -79,19 +79,19 @@ If your config file is not valid (i.e contains JSON syntax error), the config ch
 OSX
 
 ````bash
-curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.1.0/parklog_darwin_x86_64.tgz | tar -C /usr/local/bin -zxf -
+curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.2.0/parklog_darwin_x86_64.tgz | tar -C /usr/local/bin -zxf -
 ````
 
 Linux arm (Raspbery Pi)
 
 ````bash
-curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.1.0/parklog_linux_pi.tgz | tar -C /usr/local/bin -zxf -
+curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.2.0/parklog_linux_pi.tgz | tar -C /usr/local/bin -zxf -
 ````
 
 Linux
 
 ````bash
-curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.1.0/parklog_linux_x86_64.tgz | tar -C /usr/local/bin -zxf -
+curl -sL https://github.com/robinmonjo/parklog/releases/download/v0.2.0/parklog_linux_x86_64.tgz | tar -C /usr/local/bin -zxf -
 ````
 
 
