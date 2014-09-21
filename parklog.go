@@ -1,25 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
 	"encoding/json"
-	"flag"
+	"errors"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/url"
 	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 	"time"
 )
-
-//Flags
-var verbose *bool = flag.Bool("v", false, "verbose")
-var configPath *string = flag.String("c", "./parklog.json", "config file path")
 
 //Constants
 const DIAL_TIMEOUT = 5 * time.Second
@@ -32,25 +23,22 @@ const (
 	NOT_CONNECTED
 )
 
-//Global vars
-var (
-	streams     Streams
-	streamsLock = new(sync.RWMutex)
-)
-
 //Types
 type Streams []*Stream
 
-func (streams *Streams) closeAll() {
+func (streams *Streams) CloseAll() {
 	for _, stream := range *streams {
 		stream.Conn.Close()
 	}
 }
 
-func (streams *Streams) writeAll(line string) {
+func (streams *Streams) WriteAll(line string) (errors []error) {
 	for _, stream := range *streams {
-		stream.Write(line)
+		if err := stream.Write(line); err != nil {
+			errors = append(errors, err)
+		}
 	}
+	return
 }
 
 type StreamConfig struct {
@@ -77,14 +65,14 @@ func NewStream(conf *StreamConfig) (*Stream, error) {
 	return stream, nil
 }
 
-func (s *Stream) TryConnect() {
+func (s *Stream) TryConnect() error {
 	s.Status = CONNECTING
 	if err := s.Connect(); err != nil {
 		s.Status = NOT_CONNECTED
-		_log(err)
-	} else {
-		s.Status = CONNECTED
+		return err
 	}
+	s.Status = CONNECTED
+	return nil
 }
 
 func (s *Stream) Connect() error {
@@ -114,96 +102,43 @@ func (s *Stream) Connect() error {
 	return err
 }
 
-func (s *Stream) Write(line string) {
+func (s *Stream) Write(line string) error {
 	switch {
 	case s.Status == CONNECTED:
 		toWrite := []byte(s.Conf.Prefix + line)
 		n, err := s.Conn.Write(toWrite)
 		if err != nil {
 			s.Status = NOT_CONNECTED
-			_log(err)
+			return err
 		}
 		if n != len(toWrite) {
-			_log("Failed to write some bytes on ", s.Url)
+			return errors.New("Failed to write some bytes on " /* + s.Url*/)
 		}
 	case s.Status == NOT_CONNECTED:
 		s.TryConnect()
 	}
+	return nil
 }
 
-func initStreams() (err error, streams []*Stream) {
+func InitStreams(configPath string) (error, Streams) {
 	var streamConfigs []StreamConfig
-	file, err := ioutil.ReadFile(*configPath)
+	file, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return
+		return err, nil
 	}
 
 	confs := os.ExpandEnv(string(file))
 	if err = json.Unmarshal([]byte(confs), &streamConfigs); err != nil {
-		return
+		return err, nil
 	}
 
+	var streams Streams
 	for _, conf := range streamConfigs {
 		s, err := NewStream(&conf)
 		if err != nil {
-			_log(err)
-			continue
+			return err, nil
 		}
 		streams = append(streams, s)
 	}
-	return
-}
-
-func _log(v ...interface{}) {
-	if *verbose {
-		log.Println(v)
-	}
-}
-
-func main() {
-	flag.Parse()
-
-	log.SetPrefix(os.Args[0] + " -- ")
-
-	//listening for SIGUSR2 to provide hot config reload
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGUSR2)
-	go func() {
-		for {
-			<-s
-			_log("SIGUSR2 trying to reload config ...")
-			err, tmpStreams := initStreams()
-			if err != nil {
-				_log("Couldn't reload", err)
-				continue
-			}
-			streamsLock.Lock()
-			streams.closeAll()
-			streams = tmpStreams
-			tmpStreams = nil
-			streamsLock.Unlock()
-			_log("Config reloaded")
-		}
-	}()
-
-	var err error
-	if err, streams = initStreams(); err != nil {
-		//failed to read initial config, aborting
-		log.Fatal(err)
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		line, err := reader.ReadString('\n')
-
-		if err != nil {
-			if err != io.EOF {
-				_log(err)
-			}
-			break
-		}
-		streams.writeAll(line)
-	}
-	streams.closeAll()
+	return nil, streams
 }
