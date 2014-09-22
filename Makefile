@@ -1,5 +1,8 @@
 HARDWARE=$(shell uname -m)
 
+test:
+	go test
+
 build:
 	go build
 
