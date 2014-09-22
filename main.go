@@ -11,12 +11,10 @@ import (
 	"syscall"
 )
 
-//Flags
-var verbose *bool = flag.Bool("v", false, "verbose")
-var configPath *string = flag.String("c", "./parklog.json", "config file path")
-
-//Global vars
 var (
+	verbose    *bool   = flag.Bool("v", false, "verbose")
+	configPath *string = flag.String("c", "./parklog.json", "config file path")
+
 	streams     Streams
 	streamsLock = new(sync.RWMutex)
 )
@@ -55,7 +53,7 @@ func main() {
 
 	var err error
 	if err, streams = InitStreams(*configPath); err != nil {
-		//failed to read initial config, aborting
+		//failed with initial config, aborting
 		log.Fatal(err)
 	}
 

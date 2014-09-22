@@ -13,5 +13,8 @@ release:
 	cd release && tar -zcf parklog_linux_pi.tgz parklog
 	rm release/parklog
 
+test:
+	go test
+
 clean:
 	rm -rf release

@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-//Constants
 const DIAL_TIMEOUT = 5 * time.Second
 
 type StreamStatus int
@@ -23,12 +22,11 @@ const (
 	NOT_CONNECTED
 )
 
-//Types
 type Streams []*Stream
 
 func (streams *Streams) CloseAll() {
 	for _, stream := range *streams {
-		stream.Conn.Close()
+		stream.Close()
 	}
 }
 
@@ -112,12 +110,17 @@ func (s *Stream) Write(line string) error {
 			return err
 		}
 		if n != len(toWrite) {
-			return errors.New("Failed to write some bytes on " /* + s.Url*/)
+			return fmt.Errorf("Failed to write some bytes on %v", s.Url)
 		}
 	case s.Status == NOT_CONNECTED:
 		s.TryConnect()
 	}
 	return nil
+}
+
+func (s *Stream) Close() {
+	s.Conn.Close()
+	s.Status = NOT_CONNECTED
 }
 
 func InitStreams(configPath string) (error, Streams) {
