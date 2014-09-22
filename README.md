@@ -1,5 +1,7 @@
 ## Parklog
 
+[![Build Status](https://travis-ci.org/robinmonjo/parklog.svg)](https://travis-ci.org/robinmonjo/parklog)
+
 Simple tool written in Go to redirect your app stdout/stderr to different local or remote endpoints.
 
 ### Usage
