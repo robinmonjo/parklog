@@ -1,5 +1,8 @@
 HARDWARE=$(shell uname -m)
 
+test:
+	go test
+
 build:
 	go build
 
@@ -12,9 +15,6 @@ release:
 	GOOS=linux GOARCH=arm GOARM=5 go build -o release/parklog
 	cd release && tar -zcf parklog_linux_pi.tgz parklog
 	rm release/parklog
-
-test:
-	go test
 
 clean:
 	rm -rf release
